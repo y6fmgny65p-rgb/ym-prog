@@ -77,6 +77,19 @@ li .ig{flex:none;position:relative;width:76px}
 .hint b{color:var(--ink)}
 .m{width:58px;padding:3px 4px;display:inline-block;font-size:13px}
 .xp{margin:12px 0 4px}
+.ta{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--card);color:var(--ink);font:inherit;resize:vertical;min-height:88px}
+.card2{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.bf{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bf label{display:block;font-size:13px;color:var(--mut)}
+.bf label:only-child{grid-column:1/-1}
+.bf label i{font-style:normal;color:var(--ac);font-weight:600}
+.bf input{width:100%;text-align:left;padding:11px;margin-top:4px;font-size:16px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px}
+.mc{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;font-weight:600;font-size:14px}
+.mc.a{background:var(--ac);color:#fff;border-color:var(--ac)}
+.bcv{width:100%;height:auto;display:block}
+.sub b{color:var(--ink)}
+.h .cm{white-space:pre-wrap;margin:8px 0 0;font-size:14px;color:var(--ink);border-left:3px solid var(--ac);padding-left:10px}
 </style>
 </head>
 <body>
@@ -144,9 +157,9 @@ function items(wk,d){let i=0;return day(wk,d).s.map(([h,x])=>[h,x.map(t=>({i:i++
 
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}}
 let P=({yann:"Y",manon:"M"})[(location.hash||"").slice(1)]||ls("coach:p")||"Y",S,V,db=null,pt;
-function fx(){S.cur=S.cur||1;S.ch=S.ch||{};S.kg=S.kg||{};S.fin=S.fin||{};S.rm=S.rm||{};S.last=S.last||{};S.cv=S.cv||{}}
+function fx(){S.cur=S.cur||1;S.ch=S.ch||{};S.kg=S.kg||{};S.fin=S.fin||{};S.rm=S.rm||{};S.last=S.last||{};S.cv=S.cv||{};S.cm=S.cm||{};S.cmd=S.cmd||{};S.bc=S.bc||[]}
 function ld(){try{S=JSON.parse(ls("coach:"+P))}catch(e){S=null}S=S||{};fx()}
-let dl=null,tm;
+let dl=null,tm,BD={},BM="w",BX=null;
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
 const nm=v=>parseFloat(String(v).replace(",","."));
 const fm=v=>String(Math.round(v*10)/10).replace(".",",");
@@ -184,13 +197,13 @@ function hn(o,k){
 function tt(m){const e=$("#ts");e.textContent=m;e.classList.add("v");clearTimeout(tm);tm=setTimeout(()=>e.classList.remove("v"),2000)}
 function sv(){S.t=Date.now();const p=P,j=JSON.stringify(S);ls("coach:"+p,j);clearTimeout(pt);pt=setTimeout(async()=>{if(db){try{await db.doc("coach/"+p).set({s:j});tt("Enregistré et synchronisé ✓");return}catch(e){}}tt("Enregistré sur cet appareil ✓")},600)}
 function csv(){
- const ks=new Set([...Object.entries(S.ch).filter(e=>e[1]).map(e=>e[0].split("-").slice(0,2).join("-")),...Object.keys(S.fin)]);
+ const ks=new Set([...Object.entries(S.ch).filter(e=>e[1]).map(e=>e[0].split("-").slice(0,2).join("-")),...Object.keys(S.fin),...Object.keys(S.cm).filter(k=>S.cm[k])]);
  const q=v=>`"${String(v).replace(/"/g,'""')}"`;
- const rows=[["Date","Profil","Semaine","Jour","Séance","Exercice","Détail","Validé","Charge ou score"]];
+ const rows=[["Date","Profil","Semaine","Jour","Séance","Exercice","Détail","Validé","Charge ou score","Commentaire séance"]];
  [...ks].map(k=>k.split("-").map(Number)).sort((a,b)=>a[0]-b[0]||a[1]-b[1]).forEach(([wk,d])=>{
-  const k=wk+"-"+d,f=S.fin[k];
+  const k=wk+"-"+d,f=S.fin[k];let first=1;
   items(wk,d).forEach(([h,x])=>x.forEach(o=>{const kk=k+"-"+o.i;
-   rows.push([f?new Date(f).toLocaleDateString("fr-FR"):"",P=="Y"?"Yann":"Manon",wk,"J"+d,day(wk,d).t,o.n,o.s,S.ch[kk]?"Oui":"Non",S.kg[kk]||""])}))});
+   rows.push([f?new Date(f).toLocaleDateString("fr-FR"):"",P=="Y"?"Yann":"Manon",wk,"J"+d,day(wk,d).t,o.n,o.s,S.ch[kk]?"Oui":"Non",S.kg[kk]||"",first?(first=0,S.cm[k]||""):""])}))});
  return "\uFEFF"+rows.map(r=>r.map(q).join(";")).join("\n");
 }
 async function exp(){
@@ -213,24 +226,57 @@ function rd(){
    (o.f.includes("k")?`<div class="kg"><div class="ig"><input data-g="${k}" data-n="${esc(o.n)}" data-p="${o.p}" inputmode="decimal" placeholder="${ph(o)}" value="${esc(S.kg[k]||"")}">${S.kg[k]||S.cv[k]?`<button class="cx" data-cl="${k}" aria-label="Effacer la charge">×</button>`:""}</div><button class="vb${S.cv[k]?" on":""}" data-lv="${k}" data-n="${esc(o.n)}" data-p="${o.p}">${S.cv[k]?"✓ Validé":"Valider"}</button></div>`:o.f.includes("r")?`<input class="r" data-g="${k}" placeholder="score" value="${esc(S.kg[k]||"")}">`:"")+`</li>`});
   h+="</ul>"});
  const f=S.fin[wk+"-"+d];
- return h+`<div class="fin"><p>${dn} / ${tot} validés</p>`+(f?`<p class="ok">Séance terminée le ${fd(f)}</p><button class="gh" data-o="${wk}-${d}">Rouvrir la séance</button>`:`<button class="pri" data-f="${wk}-${d}">Terminer la séance</button>`)+`</div>`;
+ return h+`<h3>Commentaires</h3><textarea class="ta" data-cm="${wk}-${d}" rows="3" placeholder="Ressenti, fatigue, sensations, remarques sur la séance…">${esc(S.cm[wk+"-"+d]||"")}</textarea><div class="fin"><p>${dn} / ${tot} validés</p>`+(f?`<p class="ok">Séance terminée le ${fd(f)}</p><button class="gh" data-o="${wk}-${d}">Rouvrir la séance</button>`:`<button class="pri" data-f="${wk}-${d}">Terminer la séance</button>`)+`</div>`;
 }
 function rh(){
- const e=Object.entries(S.fin).sort((a,b)=>b[1]-a[1]);
- if(!e.length)return `<h2>Historique</h2><div class="xp"><button class="gh" data-x="1">Exporter mon suivi (CSV)</button></div><div id="cv"></div><p class="empty">Aucune séance terminée. Valide tes exercices, puis touche « Terminer la séance ».</p>`;
- return `<h2>Historique</h2><p class="sub">${e.length} séance${e.length>1?"s":""} terminée${e.length>1?"s":""}</p><div class="xp"><button class="gh" data-x="1">Exporter mon suivi (CSV)</button></div><div id="cv"></div>`+e.map(([k,t])=>{
+ const nf=Object.keys(S.fin).length,ks=new Set([...Object.keys(S.fin),...Object.keys(S.cm).filter(k=>(S.cm[k]||"").trim())]);
+ const e=[...ks].map(k=>[k,S.fin[k]||S.cmd[k]||0]).sort((a,b)=>b[1]-a[1]);
+ const xp=`<div class="xp"><button class="gh" data-x="1">Exporter mon suivi (CSV)</button></div><div id="cv"></div>`;
+ if(!e.length)return `<h2>Historique</h2>${xp}<p class="empty">Aucune séance terminée. Valide tes exercices, puis touche « Terminer la séance ».</p>`;
+ return `<h2>Historique</h2><p class="sub">${nf} séance${nf>1?"s":""} terminée${nf>1?"s":""}</p>${xp}`+e.map(([k,t])=>{
   const [wk,d]=k.split("-").map(Number),all=items(wk,d).flatMap(s=>s[1]);
   const n=all.filter(o=>S.ch[k+"-"+o.i]).length;
   const lg=all.filter(o=>S.kg[k+"-"+o.i]).map(o=>`${o.n} : ${S.kg[k+"-"+o.i]}${o.f.includes("k")?" kg":""}`).join(" · ");
-  return `<article class="h"><b>${fd(t)} · Semaine ${wk}, J${d}</b><span>${day(wk,d).t} · ${n}/${all.length} exercices</span>${lg?`<small>${lg}</small>`:""}</article>`}).join("");
+  const cm=(S.cm[k]||"").trim();
+  return `<article class="h"><b>${fd(t)} · Semaine ${wk}, J${d}</b><span>${day(wk,d).t} · ${n}/${all.length} exercices${S.fin[k]?"":" · non terminée"}</span>${lg?`<small>${lg}</small>`:""}${cm?`<p class="cm">${esc(cm)}</p>`:""}</article>`}).join("");
+}
+const BK=[["taille","Taille"],["poitrine","Poitrine"],["bras","Bras"],["cuisse","Cuisse"],["hanches","Hanches"]];
+const fy=t=>new Date(t).toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:"numeric"});
+const sg=v=>(v>0?"+":v<0?"−":"")+fm(Math.abs(v));
+function bs(){
+ const w=nm(BD.w);if(!(w>0)){tt("Le poids est obligatoire");return}if(w<20||w>400){tt("Poids invalide");return}
+ const m={};BK.forEach(([k])=>{const v=nm(BD[k]);if(v>0)m[k]=v});
+ S.bc.push({id:Date.now(),t:Date.now(),w,m});BD={};BM="w";sv();R();tt("Bilan enregistré ✓");
+}
+function ch(k){
+ const u=k=="w"?"kg":"cm",pts=S.bc.map(b=>({t:b.t,v:k=="w"?b.w:b.m[k]})).filter(p=>p.v>0).sort((a,b)=>a.t-b.t);
+ if(!pts.length)return `<p class="empty" style="margin:8px 0">Pas encore de donnée pour cette mesure.</p>`;
+ const vs=pts.map(p=>p.v),a=Math.min(...vs),z=Math.max(...vs),sp=(z-a)||1,lo=a-sp*.3,hi=z+sp*.3,x0=40,x1=326,y0=18,y1=140,n=pts.length;
+ const X=i=>n>1?x0+i/(n-1)*(x1-x0):(x0+x1)/2,Y=v=>y1-(v-lo)/(hi-lo)*(y1-y0);
+ const xy=pts.map((p,i)=>[X(i),Y(p.v)]);
+ let d=`M${xy[0][0]},${xy[0][1]}`;for(let i=1;i<n;i++){const p=xy[i-1],q=xy[i],c=(p[0]+q[0])/2;d+=` C${c},${p[1]} ${c},${q[1]} ${q[0]},${q[1]}`}
+ const last=xy[n-1],first=pts[0],end=pts[n-1];
+ const gl=[a,z].filter((v,i,r)=>r.indexOf(v)==i).map(v=>`<line x1="${x0}" x2="${x1}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-dasharray="3 5"/><text x="${x0-6}" y="${Y(v)+4}" text-anchor="end" fill="var(--mut)" font-size="11">${fm(v)}</text>`).join("");
+ const dots=xy.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="${i==n-1?6:4}" fill="var(--ac)" stroke="var(--card)" stroke-width="2"/>`).join("");
+ return `<svg class="bcv" viewBox="0 0 340 168" role="img" aria-label="Courbe de progression"><defs><linearGradient id="gr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--ac);stop-opacity:.4"/><stop offset="1" style="stop-color:var(--ac);stop-opacity:0"/></linearGradient></defs>${gl}${n>1?`<path d="${d} L${last[0]},${y1} L${xy[0][0]},${y1}Z" fill="url(#gr)"/>`:""}<path d="${d}" fill="none" stroke="var(--ac)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}<text x="${last[0]}" y="${last[1]-12}" text-anchor="${n>1?"end":"middle"}" fill="var(--ink)" font-size="13" font-weight="700">${fm(end.v)} ${u}</text><text x="${x0}" y="160" fill="var(--mut)" font-size="11">${fd(first.t)}</text>${n>1?`<text x="${x1}" y="160" text-anchor="end" fill="var(--mut)" font-size="11">${fd(end.t)}</text>`:""}</svg><p class="sub" style="margin:6px 4px 0">${n>1?`Depuis le premier bilan : <b>${sg(end.v-first.v)} ${u}</b>`:"Enregistre un 2ᵉ bilan pour voir la courbe."}</p>`;
+}
+function rb(){
+ const bc=[...S.bc].sort((a,b)=>b.t-a.t);
+ const fld=(k,l,r)=>`<label>${l}${r?` <i>obligatoire</i>`:""}<input data-bf="${k}" inputmode="decimal" placeholder="${k=="w"?"kg":"cm"}" value="${esc(BD[k]||"")}"></label>`;
+ let h=`<h2>Bilan corporel</h2><p class="sub">Poids obligatoire, mesures facultatives. La date est ajoutée automatiquement.</p>`;
+ h+=`<h3>Progression</h3><div class="chips">`+[["w","Poids"],...BK].map(([k,l])=>`<button class="mc${BM==k?" a":""}" data-bm="${k}">${l}</button>`).join("")+`</div><div class="card2">${ch(BM)}</div>`;
+ h+=`<h3>Nouveau bilan</h3><div class="card2"><div class="bf">${fld("w","Poids (kg)",1)}</div><p class="sub" style="margin:12px 0 8px">Mesures (cm) · facultatif</p><div class="bf">${BK.map(([k,l])=>fld(k,l)).join("")}</div><button class="pri" style="margin-top:14px" data-bs="1">Enregistrer le bilan</button></div>`;
+ if(bc.length)h+=`<h3>Bilans enregistrés</h3>`+bc.map((b,i)=>{const pv=bc[i+1],ms=BK.filter(([k])=>b.m[k]).map(([k,l])=>`${l} ${fm(b.m[k])}`).join(" · ");
+  return `<article class="h"><b>${fy(b.t)} · ${fm(b.w)} kg</b>${pv?`<span>${sg(b.w-pv.w)} kg vs bilan précédent</span>`:""}${ms?`<small>${ms} cm</small>`:""}<button class="gh sm" data-bx="${b.id}">${BX==b.id?"Confirmer ?":"Supprimer"}</button></article>`}).join("");
+ return h;
 }
 function R(){
  document.documentElement.dataset.pf=P;const tc=document.querySelector("meta[name=theme-color]");if(tc)tc.content=P=="Y"?"#0B0B0D":"#FFF4F8";
  $("#pf").innerHTML=[["Y","Yann"],["M","Manon"]].map(([k,n])=>`<button data-p="${k}" class="${P==k?"a":""}">${n}</button>`).join("");
- $("#dt").innerHTML=[1,2,3,4,5,6].map(d=>`<button data-v="${d}" class="${V==d?"a":""}">J${d}${S.fin[S.cur+"-"+d]?" ✓":""}</button>`).join("")+`<button data-v="h" class="${V=="h"?"a":""}">Historique</button><button data-v="r" class="${V=="r"?"a":""}">Références</button>`;
+ $("#dt").innerHTML=[1,2,3,4,5,6].map(d=>`<button data-v="${d}" class="${V==d?"a":""}">J${d}${S.fin[S.cur+"-"+d]?" ✓":""}</button>`).join("")+`<button data-v="h" class="${V=="h"?"a":""}">Historique</button><button data-v="b" class="${V=="b"?"a":""}">Bilan corporel</button><button data-v="r" class="${V=="r"?"a":""}">Références</button>`;
  $("#wl").textContent="Semaine "+S.cur;
  $("#wc").textContent="cycle "+Math.ceil(S.cur/8)+" · "+W(S.cur)+"/8";
- $("#m").innerHTML=V=="h"?rh():V=="r"?rr():rd();
+ $("#m").innerHTML=V=="h"?rh():V=="b"?rb():V=="r"?rr():rd();
 }
 document.addEventListener("click",e=>{
  const t=e.target.closest("button");if(!t)return;const g=t.dataset;
@@ -238,6 +284,9 @@ document.addEventListener("click",e=>{
  else if(g.f){S.fin[g.f]=Date.now();sv();R()}
  else if(g.o){delete S.fin[g.o];sv();R()}
  else if(g.v){V=g.v;R();scrollTo(0,0)}
+ else if(g.bs){bs()}
+ else if(g.bm){BM=g.bm;R()}
+ else if(g.bx){if(BX==g.bx){S.bc=S.bc.filter(b=>b.id!=g.bx);BX=null;sv();R();tt("Bilan supprimé")}else{BX=g.bx;R()}}
  else if(g.cl){cl(g.cl)}
  else if(g.rz){rz(g.rz)}
  else if(g.lv){vl(g.lv,g.n,+g.p)}
@@ -246,7 +295,7 @@ document.addEventListener("click",e=>{
  else if(t.id=="pw"){S.cur=Math.max(1,S.cur-1);sv();R()}
  else if(t.id=="nw"){S.cur++;sv();R()}
 });
-document.addEventListener("input",e=>{const k=e.target.dataset.g;if(k){S.kg[k]=e.target.value;if(S.cv[k]){delete S.cv[k];const o=inf(k);if(o)rc(o.n);const l=document.querySelector(`[data-vl="${k}"]`),b=document.querySelector(`[data-lv="${k}"]`);if(l)l.remove();if(b){b.classList.remove("on");b.textContent="Valider"}}sv()}});
+document.addEventListener("input",e=>{const d0=e.target.dataset;if(d0.cm){S.cm[d0.cm]=e.target.value;S.cmd[d0.cm]=Date.now();sv();return}if(d0.bf){BD[d0.bf]=e.target.value;return}const k=e.target.dataset.g;if(k){S.kg[k]=e.target.value;if(S.cv[k]){delete S.cv[k];const o=inf(k);if(o)rc(o.n);const l=document.querySelector(`[data-vl="${k}"]`),b=document.querySelector(`[data-lv="${k}"]`);if(l)l.remove();if(b){b.classList.remove("on");b.textContent="Valider"}}sv()}});
 document.addEventListener("change",e=>{const n=e.target.dataset.m;if(n){const v=nm(e.target.value);if(v>0)S.rm[n]=v;else delete S.rm[n];sv();R()}});
 window.addEventListener("hashchange",()=>{const q=({yann:"Y",manon:"M"})[location.hash.slice(1)];if(q&&q!=P){P=q;ls("coach:p",P);ld();pull();R()}});
 ls("coach:p",P);ld();V=[1,2,3,4,5,6].find(d=>!S.fin[S.cur+"-"+d])||1;R();
